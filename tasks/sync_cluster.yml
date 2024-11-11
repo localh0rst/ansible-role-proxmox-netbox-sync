@@ -6,8 +6,8 @@
       community.general.proxmox_vm_info:
         api_host: "{{ api_host }}" 
         api_user: "{{ api_user }}"
-        api_token_id: "{{ api_token_id }}"
-        api_token_secret: "{{ api_token_secret }}"
+        api_token_id: "{{ api_token }}"
+        api_token_secret: "{{ api_secret }}"
         config: current
       register: proxmox_vms
       delegate_to: localhost
@@ -18,7 +18,7 @@
         url: "https://{{ api_host }}:8006/api2/json/nodes/{{ item.node }}/qemu/{{ item.vmid }}/agent/network-get-interfaces"
         method: GET
         headers:
-        'Authorization': "PVEAPIToken={{ api_user }}!{{ api_token_secret }}={{ api_token_id }}"
+        'Authorization': "PVEAPIToken={{ api_user }}!{{ api_secret }}={{ api_token }}"
       with_items: "{{ proxmox_vms.proxmox_vms }}"
       register: proxmox_agents
       delegate_to: localhost

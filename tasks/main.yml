@@ -1,9 +1,9 @@
 ---
 - include_tasks: sync_cluster.yml
-  loop: "{{ proxmox_clusters }}"
   vars:
     name: "{{ item.name }}"
     api_host: "{{ item.api_host }}"
     api_user: "{{ item.api_user }}"
     api_token: "{{ item.api_token }}"
     api_secret: "{{ item.api_secret }}"
+  with_items: "{{ proxmox_clusters }}"
