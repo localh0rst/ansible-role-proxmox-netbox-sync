@@ -1,4 +1,8 @@
 ---
+- name: Debug proxmox_clusters
+  debug:
+    msg: "{{ item.name  }}"
+  with_items: "{{ proxmox_clusters }}"
 - include_tasks: sync_cluster.yml
   vars:
     name: "{{ item.name }}"
