@@ -1,0 +1,25 @@
+---
+- name: Running sync for cluster {{ name }}
+  block:
+
+    - name: Get virtual Machines
+      community.general.proxmox_vm_info:
+        api_host: "{{ api_host }}" 
+        api_user: "{{ api_user }}"
+        api_token_id: "{{ api_token_id }}"
+        api_token_secret: "{{ api_token_secret }}"
+        config: current
+      register: proxmox_vms
+      delegate_to: localhost
+
+    - name: Get VM Agent Information
+      uri:
+        validate_certs: false
+        url: "https://{{ api_host }}:8006/api2/json/nodes/{{ item.node }}/qemu/{{ item.vmid }}/agent/network-get-interfaces"
+        method: GET
+        headers:
+        'Authorization': "PVEAPIToken={{ api_user }}!{{ api_token_secret }}={{ api_token_id }}"
+      with_items: "{{ proxmox_vms.proxmox_vms }}"
+      register: proxmox_agents
+      delegate_to: localhost
+

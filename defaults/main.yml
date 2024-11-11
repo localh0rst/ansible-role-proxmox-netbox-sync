@@ -1,0 +1,12 @@
+---
+proxmox_clusters:
+  - name: "pve-cluster-1"
+    api_host: "proxmox-1"
+    api_user: "root@pam"
+    api_token_id: "Token-ID"
+    api_token_secret: "Token-Secret"
+
+netbox_url: "https://netbox.local"
+netbox_token: "Netbox-Token"
+
+
