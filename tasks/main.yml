@@ -1,15 +1,9 @@
 ---
-hosts: localhost
-become: false
-gather_facts: false
-
-tasks:
-
-  - include_tasks: tasks/sync_cluster.yml
-    loop: "{{ clusters }}"
-    vars:
-      name: "{{ item.name }}"
-      api_host: "{{ item.api_host }}"
-      api_user: "{{ item.api_user }}"
-      api_token: "{{ item.api_token }}"
-      api_secret: "{{ item.api_secret }}"
+- include_tasks: sync_cluster.yml
+  loop: "{{ clusters }}"
+  vars:
+    name: "{{ item.name }}"
+    api_host: "{{ item.api_host }}"
+    api_user: "{{ item.api_user }}"
+    api_token: "{{ item.api_token }}"
+    api_secret: "{{ item.api_secret }}"
