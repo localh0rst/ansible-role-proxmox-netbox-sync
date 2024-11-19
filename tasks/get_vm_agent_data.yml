@@ -20,8 +20,7 @@
   loop_control:
     loop_var: item_vm
   when: 
-    - item_vm.config is defined
-    - item_vm.config.agent
+    - item_vm.config.agent is defined
     - not item_vm.template
     - item_vm.status == 'running'
   failed_when: false
