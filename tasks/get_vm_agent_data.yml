@@ -9,6 +9,11 @@
   register: proxmox_vms
   delegate_to: localhost
 
+- name: Debug
+  debug:
+    msg: "{{ proxmox_vms }}"
+  when: proxmox_vms is defined
+
 - name: Get VM Agent Information
   uri:
     validate_certs: false
