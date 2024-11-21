@@ -1,0 +1,38 @@
+---
+- name: Adding interface for VM {{ item.item_vm.name }} to NetBox
+  netbox.netbox.netbox_vm_interface:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_token }}"
+    data:
+      name: "{{ interface.name }}"
+      virtual_machine: "{{ item.item_vm.name }}"
+      mac_address: "{{ interface['hardware-address'] | default(omit, true) }}"
+  with_items: "{{ item.json.data.result }}"
+  loop_control:
+    loop_var: interface
+  when: 
+    - item.json is defined
+    - item.json.data is defined
+    - item.json.data.result is defined
+    - interface['name'] is defined
+
+- name: Adding IP for Interface {{ interface.name }} for VM {{ item.item_vm.name }} to NetBox
+  netbox.netbox.netbox_ip_address:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_token }}"
+    data:
+      address: "{{ interface.ip }}/{{ interface.prefix }}"
+      description: "Proxmox - {{ cluster_name }} - {{ item.item_vm.name }}"
+      dns_name: "{{ interface.hostname | default(omit, true) }}"
+      assigned_object:
+        name: "{{ interface.name }}"
+        virtual_machine: "{{ item.item_vm.name }}"
+  with_items: "{{ item.json | pve_parse_interfaces }}"
+  loop_control:
+    loop_var: interface
+  when: 
+    - item.json is defined
+    - item.json.data is defined
+    - item.json.data.result is defined
+  # REMOVE THIS LATER
+  failed_when: false

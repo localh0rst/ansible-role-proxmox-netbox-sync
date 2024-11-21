@@ -1,0 +1,70 @@
+---
+- name: Get virtual Machines from Proxmox
+  community.general.proxmox_vm_info:
+    api_host: "{{ api_host }}" 
+    api_user: "{{ api_user }}"
+    api_token_id: "{{ api_token }}"
+    api_token_secret: "{{ api_secret }}"
+    config: current
+  register: proxmox_vms
+  delegate_to: localhost
+
+- name: Get VM Agent Information from Proxmox
+  uri:
+    validate_certs: false
+    url: "https://{{ api_host }}:8006/api2/json/nodes/{{ item_vm.node }}/qemu/{{ item_vm.vmid }}/agent/network-get-interfaces"
+    method: GET
+    headers:
+      Authorization: "PVEAPIToken={{ api_user }}!{{ api_token }}={{ api_secret }}"
+  with_items: "{{ proxmox_vms.proxmox_vms }}"
+  loop_control:
+    loop_var: item_vm
+  when: 
+    - item_vm.config.agent is defined
+    - not item_vm.template
+    - item_vm.status == 'running'
+  failed_when: false
+  register: proxmox_agents
+  delegate_to: localhost
+
+- name: Generating TAG list for Proxmox
+  set_fact:
+    pve_tags: "{{ pve_tags | default([]) + ( tags.item_vm.config.tags | default('') | split(';') ) }}"
+  with_items: "{{ proxmox_agents.results }}"
+  loop_control:
+    loop_var: tags
+  when: proxmox_agents is defined
+  delegate_to: localhost
+
+- name: Creating Tags in NetBox
+  netbox.netbox.netbox_tag:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_token }}"
+    data:
+      name: "{{ item }}"
+      description: "Proxmox Tags (Created by Ansible)"
+  with_items: "{{ pve_tags | unique }}"
+  when: item != ''
+
+- name: Adding VMs to NetBox
+  netbox.netbox.netbox_virtual_machine:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_token }}"
+    data:
+      name: "{{ item.name }}"
+      vcpus: "{{ item.config.cores * (item.config.sockets | default(1)) }}"
+      memory: "{{ item.config.memory }}"
+      tags: "{{ item.config.tags | default('') | split(';') | select() | default(omit, true) }}"
+      cluster: "{{ cluster_name }}"
+      #primary_ip4: "{{ item_vm.config.primary_ip4 }}"
+      #primary_ip6: "{{ item_vm.config.primary_ip6 }}"
+  with_items: "{{ proxmox_vms.proxmox_vms }}"
+
+- name: Add Disks to NetBox
+  include_tasks: tasks/add_disks_to_netbox.yml
+  with_items: "{{ proxmox_vms.proxmox_vms }}"
+  when: item.config is defined
+
+- name: Add Interfaces to NetBox
+  include_tasks: tasks/add_interfaces_to_netbox.yml
+  with_items: "{{ proxmox_agents.results }}"

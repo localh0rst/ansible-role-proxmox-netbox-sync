@@ -1,7 +1,7 @@
 ---
-- include_tasks: get_vm_agent_data.yml
+- include_tasks: sync_to_netbox.yml
   vars:
-    name: "{{ cluster.name }}"
+    cluster_name: "{{ cluster.cluster_name }}"
     api_host: "{{ cluster.api_host }}"
     api_user: "{{ cluster.api_user }}"
     api_token: "{{ cluster.api_token }}"
@@ -10,5 +10,3 @@
   loop_control:
     loop_var: cluster
 
-- include_tasks: create_vm_in_netbox.yml
- 
