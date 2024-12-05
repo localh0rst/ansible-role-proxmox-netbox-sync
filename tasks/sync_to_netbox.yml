@@ -33,18 +33,28 @@
   with_items: "{{ proxmox_agents.results }}"
   loop_control:
     loop_var: tags
-  when: proxmox_agents is defined
+  when: 
+    - proxmox_agents is defined
+    - pvenb_tags_sync
   delegate_to: localhost
+
+- name: debug
+  debug:
+  #msg "{{ [pvenb_tags_prefix] | product(item.config.tags | default('') | split(';') | select('!=', '') ) | map('join') | list }}"
+    msg: "{{ [pvenb_tags_prefix] | product(item.config.tags | default('') | split(';') | select('!=', '')) | map('join') | list }}"
+  delegate_to: localhost
+  with_items: "{{ proxmox_vms.proxmox_vms }}"
 
 - name: Creating Tags in NetBox
   netbox.netbox.netbox_tag:
     netbox_url: "{{ netbox_url }}"
     netbox_token: "{{ netbox_token }}"
     data:
-      name: "{{ item }}"
+      name: "{{ pvenb_tags_prefix | default('') }}{{ item }}"
+      color: "{{ pvenb_tags_color | default(omit, true) }}"
       description: "Proxmox Tags (Created by Ansible)"
-  with_items: "{{ pve_tags | unique }}"
-  when: item != ''
+  with_items: "{{ pve_tags | unique | select('!=', '') }}"
+  when: pvenb_tags_sync
 
 - name: Adding VMs to NetBox
   netbox.netbox.netbox_virtual_machine:
@@ -54,7 +64,7 @@
       name: "{{ item.name }}"
       vcpus: "{{ item.config.cores * (item.config.sockets | default(1)) }}"
       memory: "{{ item.config.memory }}"
-      tags: "{{ item.config.tags | default('') | split(';') | select() | default(omit, true) }}"
+      tags: "{{ [pvenb_tags_prefix] | product(item.config.tags | default('') | split(';') | select('!=', '')) | map('join') | list }}"
       cluster: "{{ cluster_name }}"
       #primary_ip4: "{{ item_vm.config.primary_ip4 }}"
       #primary_ip6: "{{ item_vm.config.primary_ip6 }}"
