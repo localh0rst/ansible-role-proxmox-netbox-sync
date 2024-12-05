@@ -8,5 +8,11 @@ proxmox_clusters:
 
 netbox_url: "https://netbox.local"
 netbox_token: "Netbox-Token"
+netbox_vrf_check: true
+netbox_vrf_default: "default"
 
 
+pvenb_tags_sync: true
+pvenb_tags_prefix: "pve_"
+pvenb_tags_description: "Proxmox Tags (Created by Ansible)"
+pvenb_tags_color: "e57000"
