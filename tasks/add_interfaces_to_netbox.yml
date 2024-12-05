@@ -16,6 +16,39 @@
     - item.json.data.result is defined
     - interface['name'] is defined
 
+#- name: Lookup prefix for IPs
+#  debug:
+#    msg: "{{ query(
+#      'netbox.netbox.nb_lookup', 'prefixes',
+#      api_endpoint=netbox_url,
+#      token=netbox_token,
+#      api_filter='contains='
+#      ) | nb_vrf_or_default(netbox_vrf_default) }}"
+#
+##      api_filter='contains=212.37.59.1/27'
+#      #) | default([]) | last }}"
+#- name: fail
+#  fail:
+#    msg: "Fail"
+
+#- name: Adding IP for Interface {{ interface.name }} for VM {{ item.item_vm.name }} to NetBox
+#  debug:
+#    msg: "{{ query(
+#      'netbox.netbox.nb_lookup', 'prefixes',
+#      api_endpoint=netbox_url,
+#      token=netbox_token,
+#      api_filter='contains=' + interface.ip + '/' + (interface.prefix | string)
+#      ) | default([]) | nb_vrf_or_default(netbox_vrf_default) }}"
+#  with_items: "{{ item.json | pve_parse_interfaces }}"
+#  loop_control:
+#    loop_var: interface
+#  when: 
+#    - item.json is defined
+#    - item.json.data is defined
+#    - item.json.data.result is defined
+#  # REMOVE THIS LATER
+#  failed_when: false
+
 - name: Adding IP for Interface {{ interface.name }} for VM {{ item.item_vm.name }} to NetBox
   netbox.netbox.netbox_ip_address:
     netbox_url: "{{ netbox_url }}"
@@ -27,6 +60,12 @@
       assigned_object:
         name: "{{ interface.name }}"
         virtual_machine: "{{ item.item_vm.name }}"
+      vrf: "{{ query(
+        'netbox.netbox.nb_lookup', 'prefixes',
+        api_endpoint=netbox_url,
+        token=netbox_token,
+        api_filter='contains=' + interface.ip + '/' + (interface.prefix | string)
+        ) | default([]) | nb_vrf_or_default(netbox_vrf_default) }}"
   with_items: "{{ item.json | pve_parse_interfaces }}"
   loop_control:
     loop_var: interface
