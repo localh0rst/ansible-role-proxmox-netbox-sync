@@ -51,6 +51,9 @@ class FilterModule(object):
         for iface in json["data"]["result"]:
             if "name" not in iface:
                 continue
+            # Skip docker bridges
+            if iface["name"].startswith("docker"):
+                continue
 
             if "ip-addresses" in iface:
                 for ip in iface["ip-addresses"]:
